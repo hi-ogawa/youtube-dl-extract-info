@@ -1,8 +1,12 @@
+import asyncio
+import socket
+import traceback
 from typing import Any, Optional
 from flask import Flask, request, Response
 from youtube_dl import YoutubeDL
 import re
-import requests
+
+from src.http3 import http3_get
 
 app = Flask(__name__)
 ydl = YoutubeDL(params=dict(cachedir=False))
@@ -14,8 +18,14 @@ ydl = YoutubeDL(params=dict(cachedir=False))
 
 @app.errorhandler(Exception)
 def handle_runtime_error(error: Exception):
-    print(error)
-    return dict(type=error.__class__.__name__, message=str(error)), 400
+    full_message = traceback.format_exc()
+    print(full_message)
+    return (
+        dict(
+            type=error.__class__.__name__, message=str(error), full_message=full_message
+        ),
+        400,
+    )
 
 
 @app.after_request
@@ -55,24 +65,28 @@ def route_download():
 
     # requests media resource
     req_headers = pick_dict(request.headers, REQ_HEADERS)
+    res = asyncio.run(http3_get(download_url, req_headers))
 
-    # respond via iterator
-    # - vercel's wrapper (or aws lambda itself) doesn't seem to support streaming response)
-    # - also, it looks like it breaks `content-length/content-range` headers
-    if False:
-        res = requests.get(download_url, headers=req_headers, stream=True)
-        res_headers = pick_dict(res.headers, RES_HEADERS)
-        res_iter = res.iter_content(chunk_size=ITER_CHUNK_SIZE)
-        return Response(res_iter, headers=res_headers)
-
-    res = requests.get(download_url, headers=req_headers)
+    # respond
     res_headers = pick_dict(res.headers, RES_HEADERS)
-    return Response(res.content, headers=res_headers)
+    return Response(res.body.getvalue(), headers=res_headers)
 
 
 REQ_HEADERS = ["range"]
 RES_HEADERS = ["content-type", "content-length", "content-range", "accept-ranges"]
-ITER_CHUNK_SIZE = 2**14
+
+
+@app.route("/debug")
+def route_debug():
+    socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
+    return dict(ok=True)
+
+
+@app.route("/debug2")
+def route_debug2():
+    socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    return dict(ok=True)
+
 
 #
 # utils
