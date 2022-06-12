@@ -1,0 +1,3 @@
+[submodule "thirdparty/aioquic"]
+	path = thirdparty/aioquic
+	url = git@github.com:aiortc/aioquic.git
