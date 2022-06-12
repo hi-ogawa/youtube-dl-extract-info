@@ -2,14 +2,14 @@
   "regions": ["hnd1"],
   "builds": [
     {
-      "src": "src/handler.py",
+      "src": "src/app.py",
       "use": "@vercel/python"
     }
   ],
   "rewrites": [
     {
       "source": "/(.*)",
-      "destination": "/src/handler.py"
+      "destination": "/src/app.py"
     }
   ]
 }

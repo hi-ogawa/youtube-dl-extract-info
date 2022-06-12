@@ -19,10 +19,11 @@ ydl.extract_info("https://www.youtube.com/watch?v=Z5ldO3PJ5IA", download=False)
 pip install -r requirements.txt
 
 # start server
-python -m src
+make dev
 
 # test
-curl http://localhost:8000/https://www.youtube.com/watch?v=Z5ldO3PJ5IA
+curl http://localhost:5000/info?url=Z5ldO3PJ5IA
+curl -H 'range: bytes=0-' 'http://localhost:5000/download?url=Z5ldO3PJ5IA&format_id=249' > test.webm
 ```
 
 ## deployment
