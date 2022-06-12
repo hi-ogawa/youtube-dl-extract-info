@@ -25,6 +25,9 @@ make dev
 curl http://localhost:5000/info?url=Z5ldO3PJ5IA
 curl -H 'range: bytes=0-' 'http://localhost:5000/download?url=Z5ldO3PJ5IA&format_id=249' > test.webm
 curl -H 'range: bytes=0-' 'https://youtube-dl-extract-info-hiro18181-hiogawa.vercel.app/download?url=Z5ldO3PJ5IA&format_id=249' > test-vercel.webm
+
+curl -v -H 'range: bytes=0-0' 'http://localhost:5000/download?url=Z5ldO3PJ5IA&format_id=249'
+curl -v -H 'range: bytes=0-0' 'https://youtube-dl-extract-info-hiro18181-hiogawa.vercel.app/download?url=Z5ldO3PJ5IA&format_id=249'
 ```
 
 ## deployment

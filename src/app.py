@@ -21,7 +21,8 @@ def handle_runtime_error(error: Exception):
 @app.after_request
 def handle_cors(response: Response) -> Response:
     response.headers.set("access-control-allow-origin", "*")
-    response.headers.set("access-control-allow-methods", "GET, POST")
+    response.headers.set("access-control-allow-methods", "GET")
+    response.headers.set("access-control-allow-headers", "range")
     return response
 
 
@@ -54,16 +55,23 @@ def route_download():
 
     # requests media resource
     req_headers = pick_dict(request.headers, REQ_HEADERS)
-    res = requests.get(download_url, headers=req_headers, stream=True)
 
-    # respond via iterator (vercel's wrapper (or aws lambda itself) doesn't seem to support streaming response)
+    # respond via iterator
+    # - vercel's wrapper (or aws lambda itself) doesn't seem to support streaming response)
+    # - also, it looks like it breaks `content-length/content-range` headers
+    if False:
+        res = requests.get(download_url, headers=req_headers, stream=True)
+        res_headers = pick_dict(res.headers, RES_HEADERS)
+        res_iter = res.iter_content(chunk_size=ITER_CHUNK_SIZE)
+        return Response(res_iter, headers=res_headers)
+
+    res = requests.get(download_url, headers=req_headers)
     res_headers = pick_dict(res.headers, RES_HEADERS)
-    res_iter = res.iter_content(chunk_size=ITER_CHUNK_SIZE)
-    return Response(res_iter, headers=res_headers)
+    return Response(res.content, headers=res_headers)
 
 
 REQ_HEADERS = ["range"]
-RES_HEADERS = ["content-type", "content-length"]
+RES_HEADERS = ["content-type", "content-length", "content-range", "accept-ranges"]
 ITER_CHUNK_SIZE = 2**14
 
 #
