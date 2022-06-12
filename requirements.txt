@@ -1,3 +1,4 @@
-youtube_dl==2021.12.17
+# for https://github.com/ytdl-org/youtube-dl/pull/30184
+git+https://github.com/ytdl-org/youtube-dl.git@530f458
 requests==2.28.0
 flask==2.1.2
