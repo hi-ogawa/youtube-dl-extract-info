@@ -23,3 +23,7 @@ vercel link -p youtube-dl-extract-info-hiro18181
 make deploy
 make deploy/production
 ```
+
+## reference
+
+- https://github.com/hi-ogawa/youtube-dl-web
