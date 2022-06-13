@@ -32,7 +32,6 @@ def handle_runtime_error(error: Exception):
 def handle_cors(response: Response) -> Response:
     response.headers.set("access-control-allow-origin", "*")
     response.headers.set("access-control-allow-methods", "GET")
-    response.headers.set("access-control-allow-headers", "range")
     return response
 
 
@@ -55,16 +54,21 @@ def route_download():
     # parse request
     url = request.args.get("url")
     format_id = request.args.get("format_id")
-    if url is None or format_id is None:
-        raise RuntimeError("invalid url or format_id")
+    # NOTE: vercel doesn't support range request/response, so we use url parameters
+    range_start = request.args.get("range_start", type=int)
+    range_end = request.args.get("range_end", type=int)
+    assert url
+    assert format_id
 
     # run extract_info
     url = fix_vercel_double_slash(url)
     info = ydl.extract_info(url, download=False)
     download_url = get_download_url(info, format_id)
 
-    # requests media resource
+    # requests media resource via http3
     req_headers = pick_dict(request.headers, REQ_HEADERS)
+    if range_start is not None and range_end is not None:
+        req_headers["range"] = f"bytes={range_start}-{range_end}"
     res = asyncio.run(http3_get(download_url, req_headers))
 
     # respond
@@ -72,8 +76,8 @@ def route_download():
     return Response(res.body.getvalue(), headers=res_headers)
 
 
-REQ_HEADERS = ["range"]
-RES_HEADERS = ["content-type", "content-length", "content-range", "accept-ranges"]
+REQ_HEADERS = []
+RES_HEADERS = ["content-type", "content-length"]
 
 
 @app.route("/debug")
